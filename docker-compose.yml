@@ -1,0 +1,10 @@
+name: reqlink
+services:
+  dev-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: reqlink
+    ports:
+      - '5432:5432'
