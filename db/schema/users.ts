@@ -1,8 +1,7 @@
 import { pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { v7 as uuid7 } from 'uuid';
 
-import { relations, type InferSelectModel } from 'drizzle-orm';
-import { teamTable } from './projects';
+import { type InferSelectModel } from 'drizzle-orm';
 
 export const userTable = pgTable('users', {
   id: varchar('id', { length: 36 })
@@ -24,10 +23,6 @@ export const sessionTable = pgTable('sessions', {
     mode: 'date',
   }).notNull(),
 });
-
-export const userRelation = relations(userTable, ({ many }) => ({
-  teams: many(teamTable),
-}));
 
 export type User = InferSelectModel<typeof userTable>;
 export type Session = InferSelectModel<typeof sessionTable>;

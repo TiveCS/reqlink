@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 
 import type { NextRequest } from 'next/server';
+import { COOKIE_SESSION } from './auth/constants';
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   if (request.method === 'GET') {
     const response = NextResponse.next();
-    const token = request.cookies.get('session')?.value ?? null;
+    const token = request.cookies.get(COOKIE_SESSION)?.value ?? null;
     if (token !== null) {
       // Only extend cookie expiration on GET requests since we can be sure
       // a new session wasn't set when handling the request.
-      response.cookies.set('session', token, {
+      response.cookies.set(COOKIE_SESSION, token, {
         path: '/',
         maxAge: 60 * 60 * 24 * 30,
         sameSite: 'lax',

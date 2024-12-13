@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { deleteSessionTokenCookie } from './cookies';
 import { getCurrentSession, invalidateSession } from './sessions';
 
-async function signOut() {
+export async function signOut() {
   const { session } = await getCurrentSession();
   if (!session) {
     return {

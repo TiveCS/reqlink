@@ -1,4 +1,4 @@
-import { InferSelectModel, relations } from 'drizzle-orm';
+import { InferSelectModel } from 'drizzle-orm';
 import {
   integer,
   pgTable,
@@ -9,13 +9,6 @@ import {
 import { v7 as uuid7 } from 'uuid';
 import { userTable } from './users';
 
-export const teamTable = pgTable('teams', {
-  id: varchar('id', { length: 36 })
-    .primaryKey()
-    .$defaultFn(() => uuid7()),
-  name: varchar('name').notNull(),
-});
-
 export enum ItemStatus {
   TODO = 1,
   IN_PROGRESS = 2,
@@ -23,23 +16,46 @@ export enum ItemStatus {
   DONE = 4,
 }
 
+export const teamTable = pgTable('teams', {
+  id: varchar('id', { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => uuid7()),
+  name: varchar('name').notNull(),
+  ownedBy: varchar('owned_by', { length: 36 })
+    .notNull()
+    .references(() => userTable.id),
+});
+
+export const teamMemberTable = pgTable('team_members', {
+  teamId: varchar('team_id', { length: 36 })
+    .notNull()
+    .references(() => teamTable.id, { onDelete: 'cascade' }),
+  memberId: varchar('member_id', { length: 36 })
+    .notNull()
+    .references(() => userTable.id, { onDelete: 'cascade' }),
+});
+
 export const projectTable = pgTable('projects', {
   id: varchar('id', { length: 36 })
     .primaryKey()
     .$defaultFn(() => uuid7()),
   teamId: varchar('team_id', { length: 36 })
     .notNull()
-    .references(() => teamTable.id),
+    .references(() => teamTable.id, { onDelete: 'cascade' }),
   name: varchar('name').notNull(),
   description: varchar('description'),
   createdAt: timestamp('created_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
   updatedAt: timestamp('updated_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
   deletedAt: timestamp('deleted_at', {
     mode: 'date',
     withTimezone: true,
@@ -52,17 +68,21 @@ export const documentSpecTable = pgTable('document_specs', {
     .$defaultFn(() => uuid7()),
   projectId: varchar('project_id', { length: 36 })
     .notNull()
-    .references(() => projectTable.id),
+    .references(() => projectTable.id, { onDelete: 'cascade' }),
   title: varchar('title').notNull(),
   description: varchar('description'),
   createdAt: timestamp('created_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
   updatedAt: timestamp('updated_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
   deletedAt: timestamp('deleted_at', {
     mode: 'date',
     withTimezone: true,
@@ -78,15 +98,22 @@ export const documentSpecItemTable = pgTable('document_spec_items', {
     .references(() => documentSpecTable.id, { onDelete: 'cascade' }),
   title: varchar('title').notNull(),
   description: text('description'),
-  status: integer('status').$type<ItemStatus>().default(ItemStatus.TODO),
+  status: integer('status')
+    .$type<ItemStatus>()
+    .notNull()
+    .default(ItemStatus.TODO),
   createdAt: timestamp('created_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
   updatedAt: timestamp('updated_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
 });
 
 export const backlogTable = pgTable('backlogs', {
@@ -95,76 +122,41 @@ export const backlogTable = pgTable('backlogs', {
     .$defaultFn(() => uuid7()),
   projectId: varchar('project_id', { length: 36 })
     .notNull()
-    .references(() => projectTable.id),
+    .references(() => projectTable.id, { onDelete: 'cascade' }),
   title: varchar('title').notNull(),
   description: text('description'),
-  status: integer('status').$type<ItemStatus>().default(ItemStatus.TODO),
+  status: integer('status')
+    .$type<ItemStatus>()
+    .notNull()
+    .default(ItemStatus.TODO),
   createdAt: timestamp('created_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
   updatedAt: timestamp('updated_at', {
     mode: 'date',
     withTimezone: true,
-  }).notNull(),
+  })
+    .notNull()
+    .defaultNow(),
 });
 
-export const backlogRelatedSpecItemsTable = pgTable(
+export const backlogRelatedSpecItemTable = pgTable(
   'backlog_related_spec_items',
   {
-    backlogId: varchar('backlog_id', { length: 36 }).references(
-      () => backlogTable.id
-    ),
-    specItemId: varchar('spec_item_id', { length: 36 }).references(
-      () => documentSpecItemTable.id
-    ),
+    backlogId: varchar('backlog_id', { length: 36 })
+      .notNull()
+      .references(() => backlogTable.id, { onDelete: 'cascade' }),
+    documentSpecItemId: varchar('document_spec_item_id', { length: 36 })
+      .notNull()
+      .references(() => documentSpecItemTable.id, { onDelete: 'cascade' }),
   }
 );
 
-export const teamRelation = relations(teamTable, ({ many }) => ({
-  projects: many(projectTable),
-  members: many(userTable),
-}));
-
-export const projectRelation = relations(projectTable, ({ one, many }) => ({
-  team: one(teamTable, {
-    fields: [projectTable.teamId],
-    references: [teamTable.id],
-  }),
-  specifications: many(documentSpecTable),
-}));
-
-export const documentSpecRelation = relations(
-  documentSpecTable,
-  ({ one, many }) => ({
-    project: one(projectTable, {
-      fields: [documentSpecTable.projectId],
-      references: [projectTable.id],
-    }),
-    items: many(documentSpecItemTable),
-    relatedBacklogs: many(backlogTable),
-  })
-);
-
-export const documentSpecItemRelation = relations(
-  documentSpecItemTable,
-  ({ one }) => ({
-    spec: one(documentSpecTable, {
-      fields: [documentSpecItemTable.documentSpecId],
-      references: [documentSpecTable.id],
-    }),
-  })
-);
-
-export const backlogRelation = relations(backlogTable, ({ one, many }) => ({
-  project: one(projectTable, {
-    fields: [backlogTable.projectId],
-    references: [projectTable.id],
-  }),
-  relatedSpecItems: many(documentSpecTable),
-}));
-
 export type Team = InferSelectModel<typeof teamTable>;
+export type TeamMember = InferSelectModel<typeof teamMemberTable>;
 export type Project = InferSelectModel<typeof projectTable>;
 export type DocumentSpec = InferSelectModel<typeof documentSpecTable>;
 export type DocumentSpecItem = InferSelectModel<typeof documentSpecItemTable>;

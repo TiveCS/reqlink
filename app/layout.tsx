@@ -1,6 +1,6 @@
+import RootProvider from '@/providers/root-provider';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import { AntdRegistry } from '@ant-design/nextjs-registry';
 import './globals.css';
 
 const geistSans = localFont({
@@ -25,11 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-[family-name:var(--font-geist-sans)]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased font-[family-name:var(--font-geist-sans)] min-h-screen`}
       >
-        <AntdRegistry>{children}</AntdRegistry>
+        <RootProvider>{children}</RootProvider>
       </body>
     </html>
   );
