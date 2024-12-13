@@ -34,28 +34,6 @@ export function ProjectList() {
               requirementSpecLeft={project.requirementSpecLeft}
             />
           ))}
-        {!isPending &&
-          projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              projectId={project.id}
-              name={project.name}
-              lastUpdated={project.updatedAt}
-              backlogLeft={project.backlogLeft}
-              requirementSpecLeft={project.requirementSpecLeft}
-            />
-          ))}
-        {!isPending &&
-          projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              projectId={project.id}
-              name={project.name}
-              lastUpdated={project.updatedAt}
-              backlogLeft={project.backlogLeft}
-              requirementSpecLeft={project.requirementSpecLeft}
-            />
-          ))}
 
         {isPending &&
           Array.from({ length: 6 }).map((_, index) => (
